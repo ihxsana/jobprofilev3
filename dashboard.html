@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Analitik - JPMS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* Dynamic Island Toast Animation */
+        .dynamic-island-toast {
+            top: 2rem;
+            left: 50%;
+            transform: translateX(-50%) scale(0.95) translateY(-30px);
+            opacity: 0;
+            transition: transform 0.45s cubic-bezier(.4,1.6,.4,1), opacity 0.3s;
+            box-shadow: 0 8px 32px 0 rgba(31, 41, 55, 0.18);
+            border-radius: 1.5rem;
+            will-change: transform, opacity;
+        }
+        .dynamic-island-toast.show {
+            opacity: 1;
+            transform: translateX(-50%) scale(1) translateY(0);
+            pointer-events: auto;
+        }
+        .dynamic-island-toast.hide {
+            opacity: 0;
+            transform: translateX(-50%) scale(0.95) translateY(-30px);
+            pointer-events: none;
+        }
+    </style>
+</head>
+
+<body class="bg-slate-100">
+
+    <div class="p-6 md:p-8">
+        <!-- Toast Notification -->
+        <div id="toast" class="fixed top-8 left-1/2 z-50 hidden min-w-[220px] max-w-xs bg-white border border-slate-200 shadow-xl rounded-2xl px-5 py-4 flex items-center gap-3 dynamic-island-toast">
+            <i id="toast-icon" class="fa-solid fa-circle-check text-2xl"></i>
+            <span id="toast-message" class="font-medium text-slate-800"></span>
+        </div>
+        <header class="mb-8">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold text-slate-800">Dashboard Analitik</h1>
+                    <p class="text-slate-500">Visualisasi data dari Job Profile yang ada.</p>
+                </div>
+                <a href="index.html"
+                    class="bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-indigo-700 transition-colors duration-300 flex items-center justify-center">
+                    <i class="fa-solid fa-arrow-left mr-2"></i> Kembali ke Aplikasi
+                </a>
+            </div>
+        </header>
+
+        <main id="dashboard-content" class="space-y-8">
+            <!-- Ringkasan Statistik -->
+            <div id="summary-stats" class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-4">
+                <div class="stat-card bg-gradient-to-br from-indigo-100 via-indigo-50 to-white p-5 rounded-2xl flex items-center gap-4 shadow-lg transition-transform duration-200 hover:scale-105 hover:shadow-2xl cursor-pointer">
+                    <i class="fa-solid fa-users text-4xl text-indigo-500 drop-shadow"></i>
+                    <div>
+                        <div class="text-3xl font-bold text-indigo-800" id="totalProfiles">0</div>
+                        <div class="text-slate-600 text-base">Total Profil</div>
+                    </div>
+                </div>
+                <div class="stat-card bg-gradient-to-br from-green-100 via-green-50 to-white p-5 rounded-2xl flex items-center gap-4 shadow-lg transition-transform duration-200 hover:scale-105 hover:shadow-2xl cursor-pointer">
+                    <i class="fa-solid fa-building text-4xl text-green-500 drop-shadow"></i>
+                    <div>
+                        <div class="text-3xl font-bold text-green-800" id="totalDepartments">0</div>
+                        <div class="text-slate-600 text-base">Departemen</div>
+                    </div>
+                </div>
+                <div class="stat-card bg-gradient-to-br from-cyan-100 via-cyan-50 to-white p-5 rounded-2xl flex items-center gap-4 shadow-lg transition-transform duration-200 hover:scale-105 hover:shadow-2xl cursor-pointer">
+                    <i class="fa-solid fa-layer-group text-4xl text-cyan-500 drop-shadow"></i>
+                    <div>
+                        <div class="text-3xl font-bold text-cyan-800" id="totalSkills">0</div>
+                        <div class="text-slate-600 text-base">Total Skills</div>
+                    </div>
+                </div>
+            </div>
+            <!-- Loading Indicator -->
+            <div id="loading" class="text-center py-10">
+                <i class="fas fa-spinner fa-spin text-4xl text-indigo-500"></i>
+                <p class="mt-2 text-slate-600">Memuat data dashboard...</p>
+            </div>
+            <!-- Konten Chart akan dimasukkan oleh JS di sini -->
+            <div id="charts-grid" class="hidden grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div class="bg-white p-6 rounded-2xl shadow-xl transition-all duration-200 animate-fade-in">
+                    <h3 class="font-semibold text-lg text-slate-900 mb-4">Profil per Departemen</h3>
+                    <div class="h-80">
+                        <canvas id="departmentChart"></canvas>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-2xl shadow-xl transition-all duration-200 animate-fade-in">
+                    <h3 class="font-semibold text-lg text-slate-900 mb-4">Top 10 Hard Skills</h3>
+                    <div class="h-80">
+                        <canvas id="hardSkillsChart"></canvas>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-2xl shadow-xl transition-all duration-200 animate-fade-in lg:col-span-2">
+                    <h3 class="font-semibold text-lg text-slate-900 mb-4">Top 10 Soft Skills</h3>
+                    <div class="h-80">
+                        <canvas id="softSkillsChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div id="error" class="hidden text-center py-10 bg-red-50 p-6 rounded-xl">
+                <i class="fa-solid fa-circle-exclamation text-4xl text-red-500"></i>
+                <p id="error-message" class="mt-2 text-red-700 font-semibold"></p>
+                <p class="text-slate-600">Mungkin sesi Anda telah berakhir. Coba kembali ke aplikasi dan login ulang.
+                </p>
+            </div>
+        </main>
+    </div>
+
+    <script src="dashboard.js"></script>
+    <script>
+    // Toast Notification Dynamic Island
+    (function() {
+        const toast = document.getElementById('toast');
+        if (!toast) return;
+        window.showToast = function(message, type = 'success') {
+            const toastIcon = document.getElementById('toast-icon');
+            const toastMessage = document.getElementById('toast-message');
+            toastMessage.textContent = message;
+            if (type === 'success') {
+                toastIcon.className = 'fa-solid fa-circle-check text-2xl text-green-500';
+                toast.classList.remove('border-red-200');
+                toast.classList.add('border-green-200');
+            } else {
+                toastIcon.className = 'fa-solid fa-circle-xmark text-2xl text-red-500';
+                toast.classList.remove('border-green-200');
+                toast.classList.add('border-red-200');
+            }
+            toast.classList.remove('hidden', 'hide');
+            void toast.offsetWidth;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+                toast.classList.add('hide');
+                setTimeout(() => toast.classList.add('hidden'), 400);
+            }, 3500);
+        };
+    })();
+    </script>
+</body>
+
+</html>

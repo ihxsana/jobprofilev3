@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profil Saya - JPMS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* Style untuk preview gambar */
+        .profile-picture-preview {
+            width: 128px;
+            height: 128px;
+            object-fit: cover;
+            border-radius: 50%;
+            border: 4px solid white;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+        /* Dynamic Island Toast Animation */
+        .dynamic-island-toast {
+            top: 2rem;
+            left: 50%;
+            transform: translateX(-50%) scale(0.95) translateY(-30px);
+            opacity: 0;
+            transition: transform 0.45s cubic-bezier(.4,1.6,.4,1), opacity 0.3s;
+            box-shadow: 0 8px 32px 0 rgba(31, 41, 55, 0.18);
+            border-radius: 1.5rem;
+            will-change: transform, opacity;
+        }
+        .dynamic-island-toast.show {
+            opacity: 1;
+            transform: translateX(-50%) scale(1) translateY(0);
+            pointer-events: auto;
+        }
+        .dynamic-island-toast.hide {
+            opacity: 0;
+            transform: translateX(-50%) scale(0.95) translateY(-30px);
+            pointer-events: none;
+        }
+    </style>
+</head>
+
+<body class="bg-slate-100">
+
+    <div class="container mx-auto p-4 md:p-8 max-w-6xl">
+        <!-- Header Halaman -->
+        <header class="mb-8 flex items-center justify-between">
+            <div>
+                <h1 class="text-3xl font-bold text-slate-800">Profil Pengguna</h1>
+                <p class="text-slate-500">Lihat dan kelola informasi profil Anda.</p>
+            </div>
+            <a href="index.html"
+                class="bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-indigo-700 transition-colors duration-300 flex items-center justify-center">
+                <i class="fa-solid fa-arrow-left mr-2"></i> Kembali ke Aplikasi
+            </a>
+        </header>
+
+        <!-- Pesan Global -->
+        <div id="message" class="hidden p-4 mb-6 text-sm rounded-lg" role="alert"></div>
+
+        <!-- Toast Notification -->
+        <div id="toast" class="fixed top-8 left-1/2 z-50 hidden min-w-[220px] max-w-xs bg-white border border-slate-200 shadow-xl rounded-2xl px-5 py-4 flex items-center gap-3 dynamic-island-toast">
+            <i id="toast-icon" class="fa-solid fa-circle-check text-2xl"></i>
+            <span id="toast-message" class="font-medium text-slate-800"></span>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+            <!-- KOLOM KIRI: Tampilan Profil -->
+            <div class="lg:col-span-1 space-y-6">
+                <div class="bg-white p-6 rounded-2xl shadow-xl text-center transition-all duration-200 animate-fade-in">
+                    <img id="display-photo" src="https://placehold.co/128x128/e2e8f0/64748b?text=Foto" alt="Foto Profil"
+                        class="profile-picture-preview mx-auto mb-4">
+                    <h2 id="display-fullname" class="text-2xl font-bold text-slate-800 break-words">Nama Lengkap</h2>
+                    <p id="display-position" class="text-indigo-600 font-semibold break-words">Posisi Jabatan</p>
+                </div>
+
+                <div class="bg-white p-6 rounded-2xl shadow-xl transition-all duration-200 animate-fade-in">
+                    <h3 class="font-semibold text-lg text-slate-900 mb-4 border-b pb-3">Informasi Dasar</h3>
+                    <!-- (SEMPURNA) Tata letak diperbaiki untuk menangani teks panjang -->
+                    <div class="space-y-3 text-slate-700">
+                        <div class="flex justify-between items-start gap-4">
+                            <span class="font-medium text-slate-500 flex-shrink-0">Username</span>
+                            <span id="display-username" class="font-semibold text-right break-all">...</span>
+                        </div>
+                        <div class="flex justify-between items-start gap-4">
+                            <span class="font-medium text-slate-500 flex-shrink-0">Email</span>
+                            <span id="display-email" class="font-semibold text-right break-all">...</span>
+                        </div>
+                        <div class="flex justify-between items-start gap-4">
+                            <span class="font-medium text-slate-500 flex-shrink-0">Telepon</span>
+                            <span id="display-phone" class="font-semibold text-right break-all">...</span>
+                        </div>
+                        <div class="flex justify-between items-start gap-4">
+                            <span class="font-medium text-slate-500 flex-shrink-0">Usia</span>
+                            <span id="display-age" class="font-semibold text-right">...</span>
+                        </div>
+                        <div class="flex justify-between items-start gap-4">
+                            <span class="font-medium text-slate-500 flex-shrink-0">Jenis Kelamin</span>
+                            <span id="display-gender" class="font-semibold text-right">...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- KOLOM KANAN: Form Edit -->
+            <div class="lg:col-span-2 space-y-8">
+                <!-- Card untuk Ubah Informasi Profil -->
+                <div class="bg-white p-6 rounded-2xl shadow-xl transition-all duration-200 animate-fade-in">
+                    <h3 class="font-semibold text-lg text-slate-900 mb-4 border-b pb-3">Ubah Informasi Profil</h3>
+                    <form id="profileForm" class="space-y-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="fullName" class="block text-sm font-medium text-slate-700">Nama
+                                    Lengkap</label>
+                                <input type="text" id="fullName"
+                                    class="mt-1 block w-full border-slate-300 rounded-lg shadow-sm" required>
+                            </div>
+                            <div>
+                                <label for="email" class="block text-sm font-medium text-slate-700">Email</label>
+                                <input type="email" id="email"
+                                    class="mt-1 block w-full border-slate-300 rounded-lg shadow-sm">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="userDepartment"
+                                    class="block text-sm font-medium text-slate-700">Departemen</label>
+                                <select id="userDepartment"
+                                    class="mt-1 block w-full border-slate-300 rounded-lg shadow-sm">
+                                    <option value="">Memuat...</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="userPosition" class="block text-sm font-medium text-slate-700">Posisi /
+                                    Jabatan</label>
+                                <select id="userPosition"
+                                    class="mt-1 block w-full border-slate-300 rounded-lg shadow-sm">
+                                    <option value="">Pilih Departemen Dahulu</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="phone" class="block text-sm font-medium text-slate-700">Telepon</label>
+                                <input type="tel" id="phone"
+                                    class="mt-1 block w-full border-slate-300 rounded-lg shadow-sm">
+                            </div>
+                            <div>
+                                <label for="age" class="block text-sm font-medium text-slate-700">Usia</label>
+                                <input type="number" id="age"
+                                    class="mt-1 block w-full border-slate-300 rounded-lg shadow-sm">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label for="gender" class="block text-sm font-medium text-slate-700">Jenis Kelamin</label>
+                            <select id="gender" class="mt-1 block w-full border-slate-300 rounded-lg shadow-sm">
+                                <option value="">Pilih...</option>
+                                <option value="Laki-laki">Laki-laki</option>
+                                <option value="Perempuan">Perempuan</option>
+                                <option value="Lainnya">Lainnya</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label for="profile_photo" class="block text-sm font-medium text-slate-700">Ganti Foto
+                                Profil</label>
+                            <input type="file" id="profile_photo" name="profile_photo" accept="image/*"
+                                class="mt-1 block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100" />
+                        </div>
+                        <div class="pt-2">
+                            <button type="submit" id="submitProfileBtn"
+                                class="bg-indigo-600 text-white font-semibold py-2 px-6 rounded-lg hover:bg-indigo-700">
+                                <i class="fa-solid fa-save mr-2"></i> Simpan Info Profil
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Card untuk Ubah Password -->
+                <div class="bg-white p-6 rounded-2xl shadow-xl transition-all duration-200 animate-fade-in">
+                    <h3 class="font-semibold text-lg text-slate-900 mb-4 border-b pb-3">Ubah Kata Sandi</h3>
+                    <form id="changePasswordForm" class="space-y-4">
+                        <div>
+                            <label for="currentPassword" class="block text-sm font-medium text-slate-700">Kata Sandi
+                                Saat Ini</label>
+                            <input type="password" id="currentPassword"
+                                class="mt-1 block w-full border-slate-300 rounded-lg shadow-sm" required>
+                        </div>
+                        <div>
+                            <label for="newPassword" class="block text-sm font-medium text-slate-700">Kata Sandi
+                                Baru</label>
+                            <input type="password" id="newPassword"
+                                class="mt-1 block w-full border-slate-300 rounded-lg shadow-sm" required>
+                        </div>
+                        <div>
+                            <label for="confirmPassword" class="block text-sm font-medium text-slate-700">Konfirmasi
+                                Kata Sandi Baru</label>
+                            <input type="password" id="confirmPassword"
+                                class="mt-1 block w-full border-slate-300 rounded-lg shadow-sm" required>
+                        </div>
+                        <div class="pt-2">
+                            <button type="submit" id="submitPasswordBtn"
+                                class="bg-slate-600 text-white font-semibold py-2 px-6 rounded-lg hover:bg-slate-700">
+                                <i class="fa-solid fa-key mr-2"></i> Ubah Kata Sandi
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="profile.js"></script>
+    <script>
+    // Toast Notification Dynamic Island
+    (function() {
+        const toast = document.getElementById('toast');
+        if (!toast) return;
+        window.showToast = function(message, type = 'success') {
+            const toastIcon = document.getElementById('toast-icon');
+            const toastMessage = document.getElementById('toast-message');
+            toastMessage.textContent = message;
+            if (type === 'success') {
+                toastIcon.className = 'fa-solid fa-circle-check text-2xl text-green-500';
+                toast.classList.remove('border-red-200');
+                toast.classList.add('border-green-200');
+            } else {
+                toastIcon.className = 'fa-solid fa-circle-xmark text-2xl text-red-500';
+                toast.classList.remove('border-green-200');
+                toast.classList.add('border-red-200');
+            }
+            toast.classList.remove('hidden', 'hide');
+            void toast.offsetWidth;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+                toast.classList.add('hide');
+                setTimeout(() => toast.classList.add('hidden'), 400);
+            }, 3500);
+        };
+    })();
+    </script>
+</body>
+
+</html>

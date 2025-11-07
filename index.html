@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Job Profile Management System</title>
+    <!-- Script untuk Tailwind CSS dan Font Awesome -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Script untuk Export PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <!-- Link ke file CSS kustom -->
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* Dynamic Island Toast Animation */
+        .dynamic-island-toast {
+            top: 2rem;
+            left: 50%;
+            transform: translateX(-50%) scale(0.95) translateY(-30px);
+            opacity: 0;
+            transition: transform 0.45s cubic-bezier(.4,1.6,.4,1), opacity 0.3s;
+            box-shadow: 0 8px 32px 0 rgba(31, 41, 55, 0.18);
+            border-radius: 1.5rem;
+            will-change: transform, opacity;
+        }
+        .dynamic-island-toast.show {
+            opacity: 1;
+            transform: translateX(-50%) scale(1) translateY(0);
+            pointer-events: auto;
+        }
+        .dynamic-island-toast.hide {
+            opacity: 0;
+            transform: translateX(-50%) scale(0.95) translateY(-30px);
+            pointer-events: none;
+        }
+    </style>
+</head>
+
+<body class="bg-slate-50 text-slate-800">
+    <div id="app" class="flex flex-col md:flex-row h-screen">
+
+        <!-- Kolom Kiri: Navigasi dan Kategori Departemen -->
+        <aside class="w-full md:w-1/3 lg:w-1/4 border-r border-slate-200 bg-white flex flex-col rounded-2xl shadow-lg m-2 md:m-0 transition-all duration-200">
+            <!-- Header & Info Pengguna -->
+            <header class="p-4 border-b border-slate-200">
+                <!-- LOGO BARU MENGGANTIKAN H1 -->
+                <a href="index.html" class="flex items-center gap-2">
+                    <svg class="h-8 w-auto text-indigo-600" viewBox="0 0 24 24" fill="currentColor"
+                        xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 12H19.5C18.1667 15.1667 15.8333 17.5 12 19.5V12Z" stroke="#4F46E5" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round" />
+                        <path d="M12 12V4.5C15.8333 6.5 18.1667 8.83333 19.5 12H12Z" stroke="#4F46E5" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round" />
+                        <path d="M12 12L4.5 19.5C6.5 15.8333 8.83333 13.5 12 12Z" stroke="#818CF8" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round" />
+                        <path d="M12 12L4.5 4.5C6.5 8.16667 8.83333 10.5 12 12Z" stroke="#818CF8" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                    <span class="text-xl font-bold text-slate-800">JPMS</span>
+                </a>
+                <div id="userInfo" class="mt-4 p-3 bg-indigo-50 rounded-lg border border-indigo-200">
+                    Memuat info pengguna...
+                </div>
+            </header>
+
+            <!-- Konten Utama Sidebar (Dapat di-scroll) -->
+            <div class="flex-1 flex flex-col overflow-y-hidden">
+                <!-- Pencarian -->
+                <div class="p-4 border-b">
+                    <div class="relative">
+                        <i class="fa fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                        <input id="searchInput" type="text" placeholder="Cari departemen atau jabatan..."
+                            class="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                </div>
+
+                <!-- Akordeon Departemen -->
+                <div id="departmentAccordion" class="flex-1 overflow-y-auto p-2 space-y-1">
+                    <!-- Loading skeleton diisi oleh JS -->
+                </div>
+            </div>
+
+            <!-- Footer: Tombol Tambah -->
+            <footer class="p-4 border-t border-slate-200">
+                <button id="addProfileBtn"
+                    class="w-full bg-indigo-600 text-white font-semibold py-2.5 px-4 rounded-lg hover:bg-indigo-700 shadow-sm hover:shadow-md transition-all duration-300 flex items-center justify-center">
+                    <i class="fa fa-plus mr-2"></i> Tambah Profil Baru
+                </button>
+            </footer>
+        </aside>
+
+        <!-- Kolom Kanan: Detail atau Form -->
+        <main id="mainContent" class="flex-1 p-6 md:p-8 overflow-y-auto rounded-2xl shadow-xl bg-white m-2 md:m-4 transition-all duration-200 animate-fade-in">
+            <!-- Konten dinamis diisi oleh JavaScript -->
+        </main>
+    </div>
+
+    <!-- TEMPLATE SKELETON LOADING -->
+    <template id="skeletonTemplate">
+        <div class="p-2">
+            <div class="skeleton-item">
+                <div class="skeleton skeleton-header"></div>
+                <div class="skeleton skeleton-line"></div>
+                <div class="skeleton skeleton-line w-3/4"></div>
+            </div>
+            <div class="skeleton-item mt-4">
+                <div class="skeleton skeleton-header"></div>
+                <div class="skeleton skeleton-line"></div>
+            </div>
+            <div class="skeleton-item mt-4">
+                <div class="skeleton skeleton-header w-1/2"></div>
+                <div class="skeleton skeleton-line"></div>
+                <div class="skeleton skeleton-line w-11/12"></div>
+            </div>
+        </div>
+    </template>
+
+    <!-- TEMPLATE UNTUK TAMPILAN DETAIL -->
+    <template id="detailViewTemplate">
+        <div id="profileDetailContent" class="animate-fade-in">
+            <div class="flex flex-wrap gap-4 justify-between items-start mb-6">
+                <div>
+                    <h2 id="detailTitle" class="text-3xl font-bold text-slate-900"></h2>
+                    <p id="detailDept" class="text-lg text-slate-600 font-medium"></p>
+                </div>
+                <div class="flex items-center flex-shrink-0 space-x-2">
+                    <button id="printBtn"
+                        class="bg-green-100 text-green-700 px-4 py-2 rounded-lg hover:bg-green-200 border border-green-200 transition-colors flex items-center font-semibold">
+                        <i class="fa-solid fa-print mr-2"></i> Cetak
+                    </button>
+                    <button id="closeBtn"
+                        class="bg-white text-slate-700 px-4 py-2 rounded-lg hover:bg-slate-100 border border-slate-300 transition-colors flex items-center">
+                        <i class="fa-solid fa-xmark mr-2"></i> Tutup
+                    </button>
+                    <button id="editBtn"
+                        class="bg-slate-200 text-slate-800 px-4 py-2 rounded-lg hover:bg-slate-300 transition-colors">
+                        <i class="fa fa-pencil mr-2"></i> Edit
+                    </button>
+                    <button id="deleteBtn"
+                        class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors">
+                        <i class="fa fa-trash mr-2"></i> Hapus
+                    </button>
+                </div>
+            </div>
+            <div class="space-y-6">
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                    <h3 class="font-semibold text-lg border-b pb-2 mb-4">Ringkasan Jabatan</h3>
+                    <p id="detailSummary" class="text-slate-700"></p>
+                </div>
+
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                    <h3 class="font-semibold text-lg border-b pb-2 mb-4">Atasan Langsung</h3>
+                    <p id="detailReportsTo" class="text-slate-700"></p>
+                </div>
+
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                    <h3 class="font-semibold text-lg border-b pb-2 mb-4">Tanggung Jawab Utama</h3>
+                    <ul id="detailResponsibilities" class="list-disc list-inside space-y-2 text-slate-700"></ul>
+                </div>
+
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                    <h3 class="font-semibold text-lg border-b pb-2 mb-4">Kualifikasi</h3>
+                    <p class="text-slate-700"><strong>Pendidikan:</strong> <span id="detailEducation"></span></p>
+                    <p class="text-slate-700 mt-1"><strong>Pengalaman:</strong> <span id="detailExperience"></span></p>
+                </div>
+
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                        <h3 class="font-semibold text-lg border-b pb-2 mb-4">Hard Skills</h3>
+                        <div id="detailHardSkills" class="flex flex-wrap gap-2"></div>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                        <h3 class="font-semibold text-lg border-b pb-2 mb-4">Soft Skills</h3>
+                        <div id="detailSoftSkills" class="flex flex-wrap gap-2"></div>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                    <h3 class="font-semibold text-lg border-b pb-2 mb-4">Key Performance Indicators (KPI)</h3>
+                    <ul id="detailKPIs" class="list-disc list-inside space-y-2 text-slate-700"></ul>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <!-- TEMPLATE UNTUK FORM TAMBAH/EDIT -->
+    <template id="formViewTemplate">
+        <div class="animate-fade-in">
+            <h2 id="formTitle" class="text-3xl font-bold text-slate-900 mb-6"></h2>
+            <form id="profileForm" class="space-y-6">
+                <input type="hidden" id="profileId">
+
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div class="form-group">
+                        <label for="department"
+                            class="block text-sm font-medium text-slate-700 mb-1">Departemen/Divisi</label>
+                        <select id="department"
+                            class="w-full border-slate-300 rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                            required>
+                            <option value="">Memuat...</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="jobTitle" class="block text-sm font-medium text-slate-700 mb-1">Nama Jabatan</label>
+                        <select id="jobTitle"
+                            class="w-full border-slate-300 rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                            required>
+                            <option value="">Pilih Departemen Dahulu</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="reportsTo" class="block text-sm font-medium text-slate-700 mb-1">Atasan Langsung</label>
+                    <input type="text" id="reportsTo"
+                        class="w-full border-slate-300 rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                </div>
+
+                <div class="form-group">
+                    <label for="summary" class="block text-sm font-medium text-slate-700 mb-1">Ringkasan Jabatan</label>
+                    <textarea id="summary" rows="4"
+                        class="w-full border-slate-300 rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Tanggung Jawab Utama</label>
+                    <div id="responsibilitiesContainer"></div>
+                    <button type="button" id="addResponsibilityBtn"
+                        class="mt-2 text-sm text-indigo-600 hover:text-indigo-800 font-semibold">+ Tambah Tanggung
+                        Jawab</button>
+                </div>
+
+                <fieldset class="border p-4 rounded-lg">
+                    <legend class="text-lg font-medium text-slate-800 px-2">Kualifikasi</legend>
+                    <div class="grid md:grid-cols-2 gap-6 mt-2">
+                        <div class="form-group">
+                            <label for="education"
+                                class="block text-sm font-medium text-slate-700 mb-1">Pendidikan</label>
+                            <input type="text" id="education"
+                                class="w-full border-slate-300 rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                        </div>
+                        <div class="form-group">
+                            <label for="experience"
+                                class="block text-sm font-medium text-slate-700 mb-1">Pengalaman</label>
+                            <input type="text" id="experience"
+                                class="w-full border-slate-300 rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                        </div>
+                    </div>
+                </fieldset>
+
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Hard Skills</label>
+                        <div id="hardSkillsContainer" class="tag-input-container">
+                            <input type="text" placeholder="Tambah skill & tekan Enter...">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">Soft Skills</label>
+                        <div id="softSkillsContainer" class="tag-input-container">
+                            <input type="text" placeholder="Tambah skill & tekan Enter...">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Key Performance Indicators
+                        (KPI)</label>
+                    <div id="kpisContainer"></div>
+                    <button type="button" id="addKpiBtn"
+                        class="mt-2 text-sm text-indigo-600 hover:text-indigo-800 font-semibold">+ Tambah KPI</button>
+                </div>
+
+                <div class="flex justify-end space-x-4 pt-4">
+                    <button type="button" id="cancelBtn"
+                        class="bg-slate-200 text-slate-800 font-semibold py-2 px-6 rounded-lg hover:bg-slate-300 transition-colors">Batal</button>
+                    <button type="submit"
+                        class="bg-indigo-600 text-white font-semibold py-2 px-6 rounded-lg hover:bg-indigo-700 transition-colors">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </template>
+
+    <!-- MODAL KONFIRMASI HAPUS -->
+    <div id="deleteModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-lg shadow-xl p-8 max-w-sm w-full mx-4">
+            <h3 class="text-xl font-bold text-slate-900">Konfirmasi Penghapusan</h3>
+            <p class="mt-2 text-slate-600">Anda yakin ingin menghapus profil jabatan <strong
+                    id="deleteProfileName"></strong>? Tindakan ini tidak dapat diurungkan.</p>
+            <div class="mt-6 flex justify-end space-x-3">
+                <button id="cancelDeleteBtn"
+                    class="bg-slate-200 text-slate-800 font-semibold py-2 px-4 rounded-lg hover:bg-slate-300">Batal</button>
+                <button id="confirmDeleteBtn"
+                    class="bg-red-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-red-700">Ya, Hapus</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed top-8 left-1/2 z-50 hidden min-w-[220px] max-w-xs bg-white border border-slate-200 shadow-xl rounded-2xl px-5 py-4 flex items-center gap-3 dynamic-island-toast">
+        <i id="toast-icon" class="fa-solid fa-circle-check text-2xl"></i>
+        <span id="toast-message" class="font-medium text-slate-800"></span>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+    // Toast Notification Dynamic Island
+    (function() {
+        const toast = document.getElementById('toast');
+        if (!toast) return;
+        window.showToast = function(message, type = 'success') {
+            const toastIcon = document.getElementById('toast-icon');
+            const toastMessage = document.getElementById('toast-message');
+            toastMessage.textContent = message;
+            if (type === 'success') {
+                toastIcon.className = 'fa-solid fa-circle-check text-2xl text-green-500';
+                toast.classList.remove('border-red-200');
+                toast.classList.add('border-green-200');
+            } else {
+                toastIcon.className = 'fa-solid fa-circle-xmark text-2xl text-red-500';
+                toast.classList.remove('border-green-200');
+                toast.classList.add('border-red-200');
+            }
+            toast.classList.remove('hidden', 'hide');
+            // Force reflow to restart animation if needed
+            void toast.offsetWidth;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+                toast.classList.add('hide');
+                setTimeout(() => toast.classList.add('hidden'), 400);
+            }, 3500);
+        };
+    })();
+    </script>
+</body>
+
+</html>

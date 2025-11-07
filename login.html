@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Sistem Pengelolaan Job Profile</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        body.login-bg {
+            min-height: 100vh;
+            background: url('https://is3.cloudhost.id/nocola.co.id/2024/09/IMG-20201231-WA0030.jpg') no-repeat center center fixed;
+            background-size: cover;
+            position: relative;
+            overflow: hidden;
+        }
+        .login-bg::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(30, 41, 59, 0.55); /* slate-800 semi-transparent */
+            z-index: 0;
+        }
+        .fade-in {
+            animation: fadeInLogin 1.2s cubic-bezier(0.4,0,0.2,1);
+        }
+        @keyframes fadeInLogin {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .login-card {
+            position: relative;
+            z-index: 1;
+        }
+    </style>
+</head>
+
+<body class="login-bg flex items-center justify-center h-screen">
+
+    <div class="w-full max-w-md bg-white p-8 rounded-2xl shadow-lg fade-in login-card">
+        <div class="text-center mb-8">
+            <img src="https://menara165.com/wp-content/uploads/2021/01/logo-semen-indonesia-web.png" alt="Logo Semen Indonesia" class="w-1/2 mx-auto">
+            <h1 class="text-3xl font-bold text-slate-800 mt-4">Job Profile Management</h1>
+            <p class="text-slate-500">Silakan login untuk melanjutkan</p>
+        </div>
+
+        <form id="loginForm">
+            <div id="error-message"
+                class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg relative mb-6"
+                role="alert">
+                <strong class="font-bold">Gagal!</strong>
+                <span class="block sm:inline" id="error-text"></span>
+            </div>
+
+            <div class="mb-4">
+                <label for="username" class="block text-sm font-medium text-slate-700 mb-1">Username</label>
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3">
+                        <i class="fa-solid fa-user text-slate-400"></i>
+                    </span>
+                    <input type="text" id="username" name="username" placeholder="Masukkan username"
+                        class="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        required>
+                </div>
+            </div>
+
+            <div class="mb-6">
+                <label for="password" class="block text-sm font-medium text-slate-700 mb-1">Password</label>
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3">
+                        <i class="fa-solid fa-lock text-slate-400"></i>
+                    </span>
+                    <input type="password" id="password" name="password" placeholder="Masukkan password"
+                        class="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        required>
+                </div>
+            </div>
+
+            <button type="submit" id="loginButton"
+                class="w-full bg-indigo-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-indigo-700 transition-colors duration-300 flex items-center justify-center">
+                <span id="button-text">Login</span>
+                <i id="button-spinner" class="fa fa-spinner fa-spin ml-2 hidden"></i>
+            </button>
+        </form>
+    </div>
+
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const loginButton = document.getElementById('loginButton');
+            const buttonText = document.getElementById('button-text');
+            const buttonSpinner = document.getElementById('button-spinner');
+            const errorMessageDiv = document.getElementById('error-message');
+            const errorTextSpan = document.getElementById('error-text');
+
+            // Show loading state
+            buttonText.textContent = 'Memproses...';
+            buttonSpinner.classList.remove('hidden');
+            loginButton.disabled = true;
+            errorMessageDiv.classList.add('hidden');
+
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData.entries());
+
+            try {
+                const response = await fetch('auth.php?action=login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.status === 'success') {
+                    sessionStorage.setItem('isLoggedIn', 'true');
+                    window.location.href = 'index.html';
+                } else {
+                    throw new Error(result.message || 'Terjadi kesalahan');
+                }
+
+            } catch (error) {
+                errorTextSpan.textContent = error.message;
+                errorMessageDiv.classList.remove('hidden');
+            } finally {
+                // Restore button state
+                buttonText.textContent = 'Login';
+                buttonSpinner.classList.add('hidden');
+                loginButton.disabled = false;
+            }
+        });
+    </script>
+
+</body>
+
+</html>

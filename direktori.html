@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Direktori Pegawai - JPMS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* Dynamic Island Toast Animation */
+        .dynamic-island-toast {
+            top: 2rem;
+            left: 50%;
+            transform: translateX(-50%) scale(0.95) translateY(-30px);
+            opacity: 0;
+            transition: transform 0.45s cubic-bezier(.4,1.6,.4,1), opacity 0.3s;
+            box-shadow: 0 8px 32px 0 rgba(31, 41, 55, 0.18);
+            border-radius: 1.5rem;
+            will-change: transform, opacity;
+        }
+        .dynamic-island-toast.show {
+            opacity: 1;
+            transform: translateX(-50%) scale(1) translateY(0);
+            pointer-events: auto;
+        }
+        .dynamic-island-toast.hide {
+            opacity: 0;
+            transform: translateX(-50%) scale(0.95) translateY(-30px);
+            pointer-events: none;
+        }
+    </style>
+</head>
+
+<body class="bg-slate-100">
+    <div class="p-6 md:p-8">
+        <header class="mb-8">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold text-slate-800">Direktori Pegawai</h1>
+                    <p class="text-slate-500">Daftar pegawai perusahaan berdasarkan departemen.</p>
+                </div>
+                <a href="index.html"
+                    class="bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-indigo-700 transition-colors duration-300 flex items-center justify-center">
+                    <i class="fa-solid fa-arrow-left mr-2"></i> Kembali ke Job Profile
+                </a>
+            </div>
+        </header>
+
+        <!-- Toast Notification -->
+        <div id="toast" class="fixed top-8 left-1/2 z-50 hidden min-w-[220px] max-w-xs bg-white border border-slate-200 shadow-xl rounded-2xl px-5 py-4 flex items-center gap-3 dynamic-island-toast">
+            <i id="toast-icon" class="fa-solid fa-circle-check text-2xl"></i>
+            <span id="toast-message" class="font-medium text-slate-800"></span>
+        </div>
+
+        <main id="directory-content" class="space-y-8">
+            <!-- Indikator Loading -->
+            <div id="loading" class="text-center py-10">
+                <i class="fas fa-spinner fa-spin text-4xl text-indigo-500"></i>
+                <p class="mt-2 text-slate-600">Memuat data direktori...</p>
+            </div>
+
+            <!-- Konten Direktori akan dimasukkan oleh JS di sini -->
+            <div id="directory-grid" class="hidden space-y-10">
+                <!-- Data dinamis dari direktori.js -->
+            </div>
+
+            <!-- Pesan Error -->
+            <div id="error" class="hidden text-center py-10 bg-red-50 p-6 rounded-xl">
+                <i class="fa-solid fa-circle-exclamation text-4xl text-red-500"></i>
+                <p id="error-message" class="mt-2 text-red-700 font-semibold"></p>
+                <p class="text-slate-600">Mungkin sesi Anda telah berakhir. Coba kembali ke aplikasi dan login ulang.
+                </p>
+            </div>
+        </main>
+    </div>
+
+    <!-- Memuat file JavaScript untuk halaman ini -->
+    <script src="direktori.js"></script>
+    <script>
+    // Toast Notification Dynamic Island
+    (function() {
+        const toast = document.getElementById('toast');
+        if (!toast) return;
+        window.showToast = function(message, type = 'success') {
+            const toastIcon = document.getElementById('toast-icon');
+            const toastMessage = document.getElementById('toast-message');
+            toastMessage.textContent = message;
+            if (type === 'success') {
+                toastIcon.className = 'fa-solid fa-circle-check text-2xl text-green-500';
+                toast.classList.remove('border-red-200');
+                toast.classList.add('border-green-200');
+            } else {
+                toastIcon.className = 'fa-solid fa-circle-xmark text-2xl text-red-500';
+                toast.classList.remove('border-green-200');
+                toast.classList.add('border-red-200');
+            }
+            toast.classList.remove('hidden', 'hide');
+            void toast.offsetWidth;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+                toast.classList.add('hide');
+                setTimeout(() => toast.classList.add('hidden'), 400);
+            }, 3500);
+        };
+    })();
+    </script>
+</body>
+
+</html>
