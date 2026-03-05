@@ -72,8 +72,6 @@ Sistem ini dapat digunakan untuk:
 
 ## Tech Stack
 
-Contoh (sesuaikan dengan project kamu):
-
 * Frontend: HTML, CSS, JavaScript
 * Backend: PHP
 * Database: MySQL
@@ -99,8 +97,6 @@ cd repository-name
 ---
 
 ## Future Improvements
-
-Beberapa pengembangan yang dapat dilakukan ke depan:
 
 * Role based access control
 * Organizational chart visualization
